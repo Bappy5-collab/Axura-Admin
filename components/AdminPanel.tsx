@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image'
 import {
   Box,
@@ -30,16 +31,45 @@ import Dashboard from './Dashboard'
 import UserManagement from './UserManagement'
 import Analytics from './Analytics'
 import Settings from './Settings'
+import UserAvatar from './UserAvatar'
 
 type ActiveView = 'dashboard' | 'users' | 'analytics' | 'settings'
 
 const drawerWidth = 260
 
-export default function AdminPanel() {
+interface AdminPanelProps {
+  initialView?: ActiveView
+  children?: React.ReactNode
+}
+
+export default function AdminPanel({ initialView, children }: AdminPanelProps) {
+  const router = useRouter()
+  const pathname = usePathname()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [activeView, setActiveView] = useState<ActiveView>('dashboard')
+  const [activeView, setActiveView] = useState<ActiveView>(initialView || 'dashboard')
+
+  // Sync activeView with pathname
+  useEffect(() => {
+    if (pathname) {
+      // Check if it's a user detail/edit page
+      if (pathname.startsWith('/users/') && pathname !== '/users') {
+        setActiveView('users')
+        return
+      }
+      
+      const viewMap: Record<string, ActiveView> = {
+        '/dashboard': 'dashboard',
+        '/users': 'users',
+        '/analytics': 'analytics',
+        '/settings': 'settings',
+        '/': 'dashboard',
+      }
+      const view = viewMap[pathname] || 'dashboard'
+      setActiveView(view)
+    }
+  }, [pathname])
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen)
@@ -47,6 +77,13 @@ export default function AdminPanel() {
 
   const handleNavigation = (view: ActiveView) => {
     setActiveView(view)
+    const routeMap: Record<ActiveView, string> = {
+      dashboard: '/dashboard',
+      users: '/users',
+      analytics: '/analytics',
+      settings: '/settings',
+    }
+    router.push(routeMap[view])
     if (isMobile) {
       setMobileOpen(false)
     }
@@ -73,6 +110,9 @@ export default function AdminPanel() {
         height: '100%',
         background: 'linear-gradient(180deg, #111827 0%, #0B0F1A 100%)',
         borderRight: '1px solid #1F2937',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <Toolbar
@@ -126,7 +166,7 @@ export default function AdminPanel() {
         </Box>
       </Toolbar>
       <Divider sx={{ borderColor: '#1F2937' }} />
-      <List sx={{ px: 2, py: 2 }}>
+      <List sx={{ px: 2, py: 2, flex: 1, overflowY: 'auto', pb: 2 }}>
         <ListItem disablePadding sx={{ mb: 0.5 }}>
           <ListItemButton
             selected={activeView === 'dashboard'}
@@ -288,6 +328,7 @@ export default function AdminPanel() {
           </ListItemButton>
         </ListItem>
       </List>
+      <UserAvatar variant="sidebar" />
     </Box>
   )
 
@@ -318,6 +359,9 @@ export default function AdminPanel() {
           sx={{
             borderBottom: 'none',
             minHeight: '64px !important',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
           <IconButton
@@ -333,6 +377,9 @@ export default function AdminPanel() {
           >
             <MenuIcon />
           </IconButton>
+          <Box sx={{ ml: 'auto' }}>
+            <UserAvatar variant="navbar" />
+          </Box>
         </Toolbar>
       </AppBar>
       <Box
@@ -382,7 +429,7 @@ export default function AdminPanel() {
         }}
       >
         <Container maxWidth="xl" sx={{ px: { xs: 0, md: 3 } }}>
-          {renderContent()}
+          {children || renderContent()}
         </Container>
       </Box>
     </Box>

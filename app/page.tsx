@@ -1,7 +1,20 @@
 'use client'
 
-import AdminPanel from '@/components/AdminPanel'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
 export default function Home() {
-  return <AdminPanel />
+  const router = useRouter()
+
+  useEffect(() => {
+    // Redirect to dashboard by default
+    router.push('/dashboard')
+  }, [router])
+
+  return (
+    <ProtectedRoute>
+      <div />
+    </ProtectedRoute>
+  )
 }

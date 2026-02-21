@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Box,
   Typography,
@@ -47,6 +48,7 @@ type SortOrder = 'asc' | 'desc'
 type SortField = 'name' | 'email' | 'subscriptionStatus'
 
 export default function UserManagement() {
+  const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [filterTab, setFilterTab] = useState<FilterTab>('all')
@@ -94,11 +96,11 @@ export default function UserManagement() {
   }
 
   const handleView = (user: User) => {
-    alert(`Viewing user: ${user.name}`)
+    router.push(`/users/${user.id}`)
   }
 
   const handleEdit = (user: User) => {
-    alert(`Editing user: ${user.name}`)
+    router.push(`/users/${user.id}/edit`)
   }
 
   const filteredUsers = useMemo(() => {
